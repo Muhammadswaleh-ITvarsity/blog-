@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mini Blog</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #fafafa;
+    color: #262626;
+  }
+
+  /* ── Header ── */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: #fff;
+    border-bottom: 1px solid #dbdbdb;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+  }
+  header img { height: 30px; }
+  nav { display: flex; gap: 8px; }
+  nav button {
+    background: none;
+    border: 1px solid #dbdbdb;
+    border-radius: 8px;
+    padding: 5px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    color: #262626;
+  }
+  nav button.active {
+    background: #262626;
+    color: #fff;
+    border-color: #262626;
+  }
+
+  /* ── Stories ── */
+  .stories-bar {
+    display: flex;
+    gap: 14px;
+    padding: 12px 16px;
+    overflow-x: auto;
+    background: #fff;
+    border-bottom: 1px solid #efefef;
+    scrollbar-width: none;
+  }
+  .stories-bar::-webkit-scrollbar { display: none; }
+  .story {
+    text-align: center;
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+  .story-ring {
+    width: 62px;
+    height: 62px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+    padding: 2px;
+  }
+  .story-ring img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #fff;
+    display: block;
+  }
+  .story p {
+    font-size: 11px;
+    color: #8e8e8e;
+    margin-top: 4px;
+  }
+
+  /* ── Main content ── */
+  main { max-width: 480px; margin: 0 auto; padding: 12px 0; }
+
+  /* ── Post card ── */
+  .post {
+    background: #fff;
+    border: 1px solid #dbdbdb;
+    border-radius: 12px;
+    margin: 0 12px 20px;
+    overflow: hidden;
+  }
+  .post-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+  }
+  .post-header img {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+  .post-header .info { flex: 1; }
+  .post-header .name { font-size: 14px; font-weight: 600; }
+  .post-header .meta { font-size: 12px; color: #8e8e8e; }
+
+  .post-image { width: 100%; display: block; max-height: 460px; object-fit: cover; }
+
+  .post-actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 12px 4px;
+  }
+  .action-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 14px;
+    color: #262626;
+    padding: 0;
+  }
+  .action-btn svg { width: 22px; height: 22px; }
+  .action-btn.liked svg { fill: #ed4956; stroke: #ed4956; }
+  .action-btn:not(.liked) svg.heart { fill: none; stroke: #262626; }
+
+  .post-caption {
+    padding: 0 12px 6px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .post-caption strong { font-weight: 600; }
+
+  /* ── Comments ── */
+  .comments-section { padding: 0 12px; }
+  .view-comments-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+    color: #8e8e8e;
+    padding: 0 0 6px;
+    display: block;
+  }
+  .comment-list { display: none; margin-bottom: 6px; }
+  .comment-list.open { display: block; }
+  .comment-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .comment-item img {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+  .comment-item p { font-size: 13px; line-height: 1.4; }
+  .comment-item p strong { font-weight: 600; }
+
+  /* ── Comment input ── */
+  .comment-input-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-top: 1px solid #efefef;
+    padding: 8px 12px;
+    margin-top: 4px;
+  }
+  .comment-input-row img {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+  .comment-input-row input {
+    flex: 1;
+    border: none;
+    background: none;
+    outline: none;
+    font-size: 13px;
+    color: #262626;
+  }
+  .comment-input-row input::placeholder { color: #aaa; }
+  .post-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    color: #0095f6;
+    display: none;
+    padding: 0;
+  }
+
+  /* ── Toast ── */
+  #toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: #262626;
+    color: #fff;
+    font-size: 13px;
+    padding: 8px 20px;
+    border-radius: 20px;
+    transition: transform 0.3s ease;
+    pointer-events: none;
+    z-index: 999;
+  }
+  #toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ── Explore tab ── */
+  #explore { display: none; padding: 12px; }
+  #explore.active { display: block; }
+  #feed.active { display: block; }
+  #feed { display: none; }
+
+  .explore-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 3px;
+    margin-bottom: 24px;
+  }
+  .explore-thumb {
+    position: relative;
+    aspect-ratio: 1;
+    overflow: hidden;
+    cursor: pointer;
+    border-radius: 4px;
+  }
+  .explore-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.2s;
+  }
+  .explore-thumb:hover img { transform: scale(1.04); }
+  .explore-thumb .thumb-likes {
+    position: absolute;
+    bottom: 5px;
+    left: 5px;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.7);
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+
+  .section-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #8e8e8e;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .suggested-list { margin-top: 20px; }
+  .suggested-person {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .suggested-person img {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+  .suggested-person .info { flex: 1; }
+  .suggested-person .name { font-size: 14px; font-weight: 600; }
+  .suggested-person .handle { font-size: 12px; color: #8e8e8e; }
+  .follow-btn {
+    background: none;
+    border: 1px solid #dbdbdb;
+    border-radius: 8px;
+    padding: 5px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    color: #262626;
+    transition: background 0.15s;
+  }
+  .follow-btn:hover { background: #f5f5f5; }
+  .follow-btn.following {
+    background: #262626;
+    color: #fff;
+    border-color: #262626;
+  }
+</style>
+</head>
+<body>
+
+<div id="toast">Link copied!</div>
+
+<header>
+  <img src="mini-blog-logo.png" alt="Mini Blog" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'"/>
+  <span style="font-size:22px; font-weight:700; font-style:italic; display:none;">Mini Blog</span>
+  <nav>
+    <button class="active" onclick="switchTab('feed', this)">Feed</button>
+    <button onclick="switchTab('explore', this)">Explore</button>
+  </nav>
+</header>
+
+<!-- Stories -->
+<div class="stories-bar" id="storiesBar"></div>
+
+<!-- Tabs -->
+<main>
+  <div id="feed" class="active"></div>
+  <div id="explore"></div>
+</main>
+
+<script>
+// ── Data ──────────────────────────────────────────────
+const people = [
+  { id: 1, name: "Bob",    handle: "@bob",    img: "bob.jpg" },
+  { id: 2, name: "Dave",   handle: "@dave",   img: "dave.jpg" },
+  { id: 3, name: "Jane",   handle: "@jane",   img: "jane.jpg" },
+  { id: 4, name: "John",   handle: "@john",   img: "john.jpg" },
+  { id: 5, name: "Lee",    handle: "@lee",    img: "lee.jpg" },
+  { id: 6, name: "Lungi",  handle: "@lungi",  img: "lungi.jpg" },
+  { id: 7, name: "Sally",  handle: "@sally",  img: "sally.jpg" },
+  { id: 8, name: "Thandi", handle: "@thandi", img: "thandi.jpg" },
+  { id: 9, name: "Andile", handle: "@andile", img: "andile.jpg" },
+];
+
+const posts = [
+  {
+    id: 1,
+    author: people[5],
+    image: "lungi.jpg",
+    caption: "Living my best life! Every day is a new adventure worth celebrating. ✨",
+    likes: 142, liked: false, shares: 18,
+    time: "2h ago",
+    comments: [
+      { author: people[0], text: "You look absolutely amazing!" },
+      { author: people[2], text: "Love this energy! 🔥" },
+    ]
+  },
+  {
+    id: 2,
+    author: people[1],
+    image: "dave.jpg",
+    caption: "Ocean vibes and salty hair. There's nowhere I'd rather be. 🌊",
+    likes: 89, liked: false, shares: 12,
+    time: "4h ago",
+    comments: [
+      { author: people[3], text: "That background is stunning!" },
+    ]
+  },
+  {
+    id: 3,
+    author: people[6],
+    image: "sally.jpg",
+    caption: "Deep in thought, deep in dreams. The quiet moments are the best.",
+    likes: 204, liked: false, shares: 31,
+    time: "6h ago",
+    comments: []
+  },
+  {
+    id: 4,
+    author: people[2],
+    image: "jane.jpg",
+    caption: "City streets and golden hour light. Found my favourite corner today. ☀️",
+    likes: 317, liked: false, shares: 44,
+    time: "8h ago",
+    comments: [
+      { author: people[5], text: "So gorgeous! Which city?" },
+      { author: people[7], text: "Stunning shot 😍" },
+    ]
+  },
+  {
+    id: 5,
+    author: people[0],
+    image: "bob.jpg",
+    caption: "Good vibes only. Smiling through every moment because life is good. 😁",
+    likes: 76, liked: false, shares: 9,
+    time: "10h ago",
+    comments: [
+      { author: people[1], text: "That smile is contagious!" }
+    ]
+  },
+  {
+    id: 6,
+    author: people[7],
+    image: "thandi.jpg",
+    caption: "Laughing loud and living proud. Authenticity is the best accessory. 💛",
+    likes: 511, liked: false, shares: 67,
+    time: "1d ago",
+    comments: [
+      { author: people[6], text: "QUEEN 👑" },
+      { author: people[2], text: "So radiant! Love this!" },
+    ]
+  },
+  {
+    id: 7,
+    author: people[8],
+    image: "andile.jpg",
+    caption: "Focused. Determined. Ready for whatever comes next. 💪",
+    likes: 98, liked: false, shares: 14,
+    time: "1d ago",
+    comments: [
+      { author: people[0], text: "Keep going Andile! 🔥" },
+    ]
+  },
+];
+
+// ── Helpers ──────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ── Stories ──────────────────────────────────────────
+function renderStories() {
+  const bar = document.getElementById('storiesBar');
+  bar.innerHTML = people.map(p => `
+    <div class="story">
+      <div class="story-ring">
+        <img src="${p.img}" alt="${p.name}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2260%22 height=%2260%22><circle cx=%2230%22 cy=%2230%22 r=%2230%22 fill=%22%23ddd%22/></svg>'"/>
+      </div>
+      <p>${p.name}</p>
+    </div>
+  `).join('');
+}
+
+// ── Post HTML ─────────────────────────────────────────
+function heartSVG() {
+  return `<svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+  </svg>`;
+}
+function commentSVG() {
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+  </svg>`;
+}
+function shareSVG() {
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+  </svg>`;
+}
+
+function commentItemHTML(c) {
+  return `<div class="comment-item">
+    <img src="${c.author.img}" alt="${c.author.name}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2226%22 height=%2226%22><circle cx=%2213%22 cy=%2213%22 r=%2213%22 fill=%22%23ddd%22/></svg>'"/>
+    <p><strong>${c.author.name}</strong> ${c.text}</p>
+  </div>`;
+}
+
+function buildPost(post) {
+  const div = document.createElement('div');
+  div.className = 'post';
+  div.dataset.id = post.id;
+  div.innerHTML = `
+    <div class="post-header">
+      <img src="${post.author.img}" alt="${post.author.name}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2236%22 height=%2236%22><circle cx=%2218%22 cy=%2218%22 r=%2218%22 fill=%22%23ddd%22/></svg>'"/>
+      <div class="info">
+        <div class="name">${post.author.name}</div>
+        <div class="meta">${post.author.handle} · ${post.time}</div>
+      </div>
+    </div>
+
+    <img class="post-image" src="${post.image}" alt="Post" onerror="this.style.display='none'"/>
+
+    <div class="post-actions">
+      <button class="action-btn ${post.liked ? 'liked' : ''}" id="like-btn-${post.id}" onclick="toggleLike(${post.id})">
+        ${heartSVG()}
+        <span id="like-count-${post.id}">${post.likes}</span>
+      </button>
+      <button class="action-btn" onclick="toggleComments(${post.id})">
+        ${commentSVG()}
+        <span id="comment-count-${post.id}">${post.comments.length}</span>
+      </button>
+      <button class="action-btn" onclick="sharePost(${post.id})">
+        ${shareSVG()}
+        <span id="share-count-${post.id}">${post.shares}</span>
+      </button>
+    </div>
+
+    <div class="post-caption">
+      <strong>${post.author.name}</strong> ${post.caption}
+    </div>
+
+    <div class="comments-section">
+      ${post.comments.length > 0
+        ? `<button class="view-comments-btn" onclick="toggleComments(${post.id})">View all ${post.comments.length} comment${post.comments.length > 1 ? 's' : ''}</button>`
+        : ''}
+      <div class="comment-list" id="comments-${post.id}">
+        ${post.comments.map(commentItemHTML).join('')}
+      </div>
+    </div>
+
+    <div class="comment-input-row">
+      <img src="${people[0].img}" alt="You" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2228%22 height=%2228%22><circle cx=%2214%22 cy=%2214%22 r=%2214%22 fill=%22%23ddd%22/></svg>'"/>
+      <input type="text" placeholder="Add a comment…" id="input-${post.id}"
+        oninput="document.getElementById('postbtn-${post.id}').style.display = this.value.trim() ? 'block' : 'none'"
+        onkeydown="if(event.key==='Enter') submitComment(${post.id})"/>
+      <button class="post-btn" id="postbtn-${post.id}" onclick="submitComment(${post.id})">Post</button>
+    </div>
+  `;
+  return div;
+}
+
+// ── Actions ───────────────────────────────────────────
+function toggleLike(id) {
+  const post = posts.find(p => p.id === id);
+  post.liked = !post.liked;
+  post.likes += post.liked ? 1 : -1;
+  const btn = document.getElementById('like-btn-' + id);
+  const count = document.getElementById('like-count-' + id);
+  btn.classList.toggle('liked', post.liked);
+  count.textContent = post.likes;
+}
+
+function toggleComments(id) {
+  const list = document.getElementById('comments-' + id);
+  list.classList.toggle('open');
+}
+
+function sharePost(id) {
+  const post = posts.find(p => p.id === id);
+  post.shares++;
+  document.getElementById('share-count-' + id).textContent = post.shares;
+  showToast('Link copied to clipboard!');
+}
+
+function submitComment(id) {
+  const input = document.getElementById('input-' + id);
+  const text = input.value.trim();
+  if (!text) return;
+  const post = posts.find(p => p.id === id);
+  const newComment = { author: people[0], text };
+  post.comments.push(newComment);
+
+  // Add to DOM
+  const list = document.getElementById('comments-' + id);
+  list.innerHTML += commentItemHTML(newComment);
+  list.classList.add('open');
+  document.getElementById('comment-count-' + id).textContent = post.comments.length;
+
+  input.value = '';
+  document.getElementById('postbtn-' + id).style.display = 'none';
+}
+
+// ── Tab switching ─────────────────────────────────────
+function switchTab(tab, btn) {
+  document.getElementById('feed').classList.remove('active');
+  document.getElementById('explore').classList.remove('active');
+  document.getElementById(tab).classList.add('active');
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (tab === 'explore') renderExplore();
+}
+
+// ── Render feed ───────────────────────────────────────
+function renderFeed() {
+  const feed = document.getElementById('feed');
+  feed.innerHTML = '';
+  posts.forEach(post => feed.appendChild(buildPost(post)));
+}
+
+// ── Render explore ────────────────────────────────────
+function renderExplore() {
+  const ex = document.getElementById('explore');
+  ex.innerHTML = `
+    <p class="section-label">Top Posts</p>
+    <div class="explore-grid">
+      ${posts.map(p => `
+        <div class="explore-thumb" onclick="switchTab('feed', document.querySelectorAll('nav button')[0])">
+          <img src="${p.image}" alt="${p.author.name}" onerror="this.style.display='none'"/>
+          <div class="thumb-likes">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="#fff" stroke="#fff" stroke-width="2">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+            </svg>
+            ${p.likes}
+          </div>
+        </div>
+      `).join('')}
+    </div>
+
+    <p class="section-label">Suggested People</p>
+    <div class="suggested-list">
+      ${people.map(p => `
+        <div class="suggested-person">
+          <img src="${p.img}" alt="${p.name}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2242%22 height=%2242%22><circle cx=%2221%22 cy=%2221%22 r=%2221%22 fill=%22%23ddd%22/></svg>'"/>
+          <div class="info">
+            <div class="name">${p.name}</div>
+            <div class="handle">${p.handle}</div>
+          </div>
+          <button class="follow-btn" onclick="toggleFollow(this)">Follow</button>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function toggleFollow(btn) {
+  btn.classList.toggle('following');
+  btn.textContent = btn.classList.contains('following') ? 'Following' : 'Follow';
+}
+
+// ── Init ──────────────────────────────────────────────
+renderStories();
+renderFeed();
+</script>
+</body>
+</html>
